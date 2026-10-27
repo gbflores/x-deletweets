@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X DeleTweets</title>
+<meta name="description" content="Apague seus posts, respostas, reposts e curtidas no X (Twitter) direto no navegador. Gratuito, código aberto, sem enviar dados a ninguém.">
+<meta property="og:title" content="X DeleTweets">
+<meta property="og:description" content="Apague seus posts, respostas, reposts e curtidas no X direto no navegador. Gratuito e de código aberto.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗑️</text></svg>">
+<style>
+  :root {
+    --bg: #ffffff; --surface: #f7f9f9; --border: #e1e8ed; --text: #0f1419; --muted: #536471;
+    --accent: #1d9bf0; --danger: #f4212e; --ok: #00ba7c; --code: #f1f3f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #000000; --surface: #16181c; --border: #2f3336; --text: #e7e9ea; --muted: #71767b;
+      --code: #1d1f23;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #000000; --surface: #16181c; --border: #2f3336; --text: #e7e9ea; --muted: #71767b; --code: #1d1f23;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px 64px; }
+  h1 { font-size: clamp(32px, 6vw, 44px); line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.02em; }
+  h2 { font-size: 22px; margin: 48px 0 12px; }
+  h3 { font-size: 17px; margin: 24px 0 8px; }
+  p { margin: 0 0 12px; }
+  a { color: var(--accent); }
+  .lead { font-size: 18px; color: var(--muted); max-width: 60ch; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 8px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 12px 20px;
+         font: 700 15px/1 inherit; font-family: inherit; cursor: pointer; text-decoration: none; }
+  .btn.primary { background: var(--text); color: var(--bg); }
+  .btn.secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .status { min-height: 1.6em; color: var(--ok); font-size: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin: 16px 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  .grid .card { margin: 0; }
+  ul { margin: 0; padding-left: 20px; }
+  li { margin: 4px 0; }
+  .yes h3 { color: var(--danger); }
+  .no h3 { color: var(--ok); }
+  ol.steps { counter-reset: s; list-style: none; padding: 0; }
+  ol.steps > li { counter-increment: s; position: relative; padding-left: 44px; margin: 14px 0; }
+  ol.steps > li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 30px; height: 30px;
+         border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+         display: grid; place-items: center; }
+  code, kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; background: var(--code);
+         border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
+  .warn { border-left: 4px solid var(--danger); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+  .table-wrap { overflow-x: auto; }
+  details { border-bottom: 1px solid var(--border); padding: 12px 0; }
+  summary { cursor: pointer; font-weight: 600; }
+  details p { margin-top: 8px; color: var(--muted); }
+  footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+  .tabs { display: flex; gap: 8px; margin: 16px 0 0; }
+  .tab { border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 999px;
+         padding: 8px 14px; font: 600 14px/1 inherit; font-family: inherit; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>🗑️ X DeleTweets</h1>
+    <p class="lead">Apague seus posts, respostas, reposts e curtidas no X (Twitter) direto no navegador.
+      É gratuito e de código aberto. Não precisa de API nem instalar programa, e nenhum site recebe acesso à sua conta.</p>
+    <div class="actions">
+      <button class="btn primary" id="copy">📋 Copiar o script</button>
+      <a class="btn secondary" href="https://raw.githubusercontent.com/gbflores/x-deletweets/main/x-deletweets.user.js">Instalar como userscript</a>
+      <a class="btn secondary" href="https://github.com/gbflores/x-deletweets">Ver o código no GitHub</a>
+    </div>
+    <div class="status" id="status" role="status"></div>
+  </header>
+
+  <section>
+    <h2>O que ele apaga</h2>
+    <div class="grid">
+      <div class="card yes">
+        <h3>Apaga (se você marcar)</h3>
+        <ul>
+          <li><strong>Posts</strong>, incluindo o fixado, threads, citações e posts com foto ou vídeo</li>
+          <li><strong>Respostas</strong> que você deu em qualquer conversa</li>
+          <li><strong>Reposts</strong> (desfaz o repost; o post original continua com o autor)</li>
+          <li><strong>Curtidas</strong> (opcional, vem desmarcado)</li>
+        </ul>
+      </div>
+      <div class="card no">
+        <h3>Não mexe em</h3>
+        <ul>
+          <li>Posts e respostas de <strong>outras pessoas</strong>, mesmo nas suas conversas</li>
+          <li>Mensagens diretas (DMs), itens salvos, listas e comunidades</li>
+          <li>Quem você segue e quem segue você</li>
+          <li>Foto, nome, bio e configurações do perfil</li>
+          <li>A sua conta: ela continua existindo</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:16px">Com o filtro de data, só apaga o que for <strong>anterior</strong> à data escolhida. O resto fica.</p>
+  </section>
+
+  <section>
+    <h2>Antes de começar</h2>
+    <div class="card warn">
+      <p><strong>Não tem como desfazer.</strong> O que for apagado some de vez.</p>
+      <p style="margin:0">Se quiser guardar uma cópia, peça o arquivo dos seus dados no X antes:
+        <em>Configurações › Sua conta › Baixar um arquivo dos seus dados</em>. Ele fica pronto em 24 a 48 horas.</p>
+    </div>
+    <ul>
+      <li>Use no <strong>computador</strong> (Chrome, Edge, Brave, Firefox). Não funciona no app do celular.</li>
+      <li>Esteja logado na conta que quer limpar.</li>
+      <li>Rode primeiro com <strong>Simular</strong> marcado para ver quanto ele encontra, sem apagar nada.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Como usar</h2>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" aria-controls="console" id="t-console">Colar no console</button>
+      <button class="tab" role="tab" aria-selected="false" aria-controls="userscript" id="t-userscript">Instalar como userscript</button>
+    </div>
+
+    <div id="console" role="tabpanel" aria-labelledby="t-console">
+      <p style="margin-top:16px;color:var(--muted)">Não instala nada. Quando você recarregar a página, o script some.</p>
+      <ol class="steps">
+        <li>Clique em <strong>📋 Copiar o script</strong> no topo desta página.</li>
+        <li>Abra <a href="https://x.com" rel="noopener">x.com</a> e entre na sua conta.</li>
+        <li>Abra o console do navegador: <kbd>F12</kbd> e a aba <strong>Console</strong>
+          (ou <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>J</kbd>; no Mac, <kbd>Cmd</kbd>+<kbd>Option</kbd>+<kbd>J</kbd>).</li>
+        <li>Cole com <kbd>Ctrl</kbd>+<kbd>V</kbd> e aperte <kbd>Enter</kbd>.<br>
+          Se o Chrome bloquear, digite <code>allow pasting</code> (ou <code>permitir colar</code>), aperte <kbd>Enter</kbd> e cole de novo.</li>
+        <li>O painel do <strong>X DeleTweets</strong> aparece no canto inferior direito. Pode fechar o console.</li>
+      </ol>
+    </div>
+
+    <div id="userscript" role="tabpanel" aria-labelledby="t-userscript" hidden>
+      <p style="margin-top:16px;color:var(--muted)">Fica instalado. Bom se você pretende limpar a conta de tempos em tempos.</p>
+      <ol class="steps">
+        <li>Instale a extensão <a href="https://www.tampermonkey.net/" rel="noopener">Tampermonkey</a> ou
+          <a href="https://violentmonkey.github.io/" rel="noopener">Violentmonkey</a>.</li>
+        <li>Clique em <strong>Instalar como userscript</strong> no topo desta página e confirme na extensão.</li>
+        <li>Abra <a href="https://x.com" rel="noopener">x.com</a>. Aparece o botão <strong>🗑 DeleTweets</strong> no canto inferior direito.</li>
+        <li>Clique nele para abrir o painel.</li>
+      </ol>
+      <p>O script não se atualiza sozinho. Para pegar uma versão nova, instale de novo pelo mesmo link.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Usando o painel</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Opção</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Posts e respostas</strong></td><td>Apaga tudo o que você publicou.</td></tr>
+          <tr><td><strong>Reposts</strong></td><td>Desfaz seus reposts.</td></tr>
+          <tr><td><strong>Curtidas</strong></td><td>Remove suas curtidas.</td></tr>
+          <tr><td><strong>Só o que for anterior a</strong></td><td>Mantém tudo a partir dessa data. Vazio apaga tudo. Nas curtidas vale a data do post curtido.</td></tr>
+          <tr><td><strong>Manter o post fixado</strong></td><td>Não apaga o post fixado no perfil.</td></tr>
+          <tr><td><strong>Simular</strong></td><td>Só conta o que seria apagado. Não apaga nada.</td></tr>
+          <tr><td><strong>Ritmo</strong></td><td><em>Lento</em> é o mais seguro para contas grandes; <em>Rápido</em> aumenta a chance de o X limitar.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <ol class="steps">
+      <li>Marque o que quer apagar e clique em <strong>Começar</strong>.</li>
+      <li>Confirme o aviso. O script abre sozinho as abas <em>Respostas</em>, <em>Posts</em> e <em>Curtidas</em> do seu perfil.</li>
+      <li>Deixe a aba <strong>aberta e visível</strong> até aparecer “Concluído”. O painel mostra a contagem em tempo real.</li>
+      <li>Clique em <strong>Parar</strong> a qualquer momento para interromper.</li>
+    </ol>
+    <p>Leva em média 2 a 3 segundos por item: uns 300 posts levam cerca de 15 minutos.</p>
+  </section>
+
+  <section>
+    <h2>Dúvidas comuns</h2>
+    <details>
+      <summary>Terminou, mas o perfil ainda mostra alguns posts no contador.</summary>
+      <p>O contador do X demora a atualizar. Recarregue a página e rode de novo. Se as abas aparecem vazias e o número
+        não zera, são posts que o X não mostra mais no perfil (por exemplo, respostas a contas suspensas ou que bloquearam você).</p>
+    </details>
+    <details>
+      <summary>Tenho milhares de posts e ele parou antes do fim.</summary>
+      <p>O X só carrega por volta dos 3.200 posts mais recentes no perfil. Espere alguns minutos, recarregue e rode de novo;
+        a cada rodada aparecem mais. Use o ritmo <em>Lento</em>.</p>
+    </details>
+    <details>
+      <summary>Apareceu “Muitos erros seguidos” ou “Erros demais. Parei.”</summary>
+      <p>Normalmente é o limite de ações do X. O script pausa sozinho por 60 segundos; se continuar, ele para.
+        Espere de 15 a 30 minutos e rode de novo, de preferência no ritmo <em>Lento</em>.</p>
+    </details>
+    <details>
+      <summary>Meu X está em outro idioma. Funciona?</summary>
+      <p>Sim. O script reconhece o botão “Excluir” em mais de 25 idiomas e, se não reconhecer o texto, identifica o item pela cor vermelha.
+        Se não funcionar no seu idioma, <a href="https://github.com/gbflores/x-deletweets/issues">abra uma issue</a>.</p>
+    </details>
+    <details>
+      <summary>É seguro colar código no console?</summary>
+      <p>Só cole código que você leu ou que vem de uma fonte em que confia. Este script é um único arquivo aberto no GitHub:
+        não faz requisições de rede, não lê cookies, tokens nem senhas, e só clica nos botões da página, como você faria à mão.
+        Desconfie de qualquer versão que peça sua senha ou envie dados para outro site.</p>
+    </details>
+    <details>
+      <summary>Minha conta pode ser bloqueada?</summary>
+      <p>Automatizar ações vai contra os termos do X. As pausas entre ações diminuem o risco, mas não eliminam. O uso é por sua conta e risco.</p>
+    </details>
+  </section>
+
+  <footer>
+    <p>Código aberto sob licença MIT · <a href="https://github.com/gbflores/x-deletweets">github.com/gbflores/x-deletweets</a> ·
+      feito por <a href="https://guiflores.dev">Guilherme Flores</a>. Sem relação com o X Corp.</p>
+  </footer>
+</main>
+
+<script>
+  const RAW = 'https://raw.githubusercontent.com/gbflores/x-deletweets/main/x-deletweets.user.js';
+  const status = document.getElementById('status');
+
+  document.getElementById('copy').addEventListener('click', async () => {
+    status.style.color = '';
+    status.textContent = 'Copiando…';
+    try {
+      const res = await fetch(RAW, { cache: 'no-store' });
+      if (!res.ok) throw new Error(res.status);
+      await navigator.clipboard.writeText(await res.text());
+      status.textContent = '✓ Script copiado. Agora abra o x.com e cole no console (passo 3).';
+    } catch (e) {
+      status.style.color = 'var(--danger)';
+      status.innerHTML = 'Não deu para copiar automaticamente. <a href="' + RAW + '">Abra o arquivo</a>, selecione tudo (Ctrl+A) e copie.';
+    }
+  });
+
+  const tabs = [...document.querySelectorAll('.tab')];
+  tabs.forEach((tab) => tab.addEventListener('click', () => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute('aria-selected', on);
+      document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    });
+  }));
+</script>
+</body>
+</html>

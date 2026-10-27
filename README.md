@@ -3,10 +3,23 @@
 Apague **seus posts, respostas, reposts e curtidas** no X (Twitter) direto no navegador, sem API paga, sem
 instalar programa e sem entregar sua conta a nenhum site.
 
+**👉 Passo a passo com botão de copiar: https://gbflores.github.io/x-deletweets/**
+
 > 🇺🇸 English version below.
 
 O script clica na própria interface do X, como você faria à mão, só que sozinho e com pausas para não
 acionar os limites da plataforma.
+
+## O que ele apaga
+
+| Apaga (se você marcar) | Não mexe em |
+| --- | --- |
+| **Posts**, incluindo o fixado, threads, citações e posts com foto ou vídeo | Posts e respostas de **outras pessoas**, mesmo nas suas conversas |
+| **Respostas** que você deu em qualquer conversa | Mensagens diretas, itens salvos, listas e comunidades |
+| **Reposts** (desfaz; o post original continua com o autor) | Quem você segue e quem segue você |
+| **Curtidas** (opcional, vem desmarcado) | Foto, nome, bio e configurações do perfil; a conta continua existindo |
+
+Com o filtro de data, só apaga o que for anterior à data escolhida.
 
 ## Por que confiar
 
